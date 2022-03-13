@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+# QTCreator
+*.user
+
+# vscode
+.vscode/
+build/

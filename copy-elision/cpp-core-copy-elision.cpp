@@ -9,13 +9,22 @@
 
 
 #include <class-a.h>
+#include <iomanip>
 
 using namespace cpp_core_sandbox;
 
 A GenerateInstanceOfA_local( void )
 {
     A local;
-    return local;    
+    return local;
+}
+
+A GenerateInstanceOfA_local_undefined( void )
+{
+    A local;
+    A local2{ std::move( local ) };
+
+    return local;
 }
 
 A GenerateInstanceOfA_temporary( void )
@@ -59,6 +68,7 @@ int main(void)
         }
         catch( A& by_ref ) {
             std::cout << "addr of `by_ref`: " << reinterpret_cast< uint64_t >( &by_ref ) << std::endl;
+            std::cout << "rethrow; catch by value .."  << std::endl;
             throw;
         }
     }

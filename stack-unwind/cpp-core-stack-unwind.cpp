@@ -1,3 +1,6 @@
+// A playground to investigate the unwinding of stack after an exception was thrown
+
+
 #include <class-a.h>
 #include <iomanip>
 

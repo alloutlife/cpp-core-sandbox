@@ -17,4 +17,5 @@ endif()
 
 add_subdirectory( copy-elision )
 add_subdirectory( stack-unwind )
+add_subdirectory( move-semantics )
 add_subdirectory( common )

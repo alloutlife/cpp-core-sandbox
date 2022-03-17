@@ -15,7 +15,7 @@ int main( void )
         // Life time is limited by the scope of definition of the reference
 
         const double& ref_d = 3;    // Ex.1. Looks weird but legit. Compiler creates a temporary object converted from prvalue (integer 3)
-                                    // and stores it in a memory (temporary materialization conversion).
+                                    // and stores it in memory (temporary materialization conversion).
                                     // Since that point `&ref_d` addresses an 8-bytes area containing the exact value.
                                     // So it is bound to a temp xvalue
         std::cout << "ref_d = " << ref_d << "; addr = " << std::hex << &ref_d << std::endl;
@@ -32,7 +32,7 @@ int main( void )
 
         // Note: the both addr1 and addr2 have the same address
 
-        // Having a reference to an lvalue, we see the same thing: all the three variables have the same address
+        // Having a reference to an lvalue, we see the same thing: all three variables have the same address
         std::string local_str{ "zz4455" };
         const std::string& ref_local_str = local_str;
         const std::string& ref_local_str2 = local_str;
@@ -53,8 +53,8 @@ int main( void )
                                 // the parentheses
 
         // Note: non-const references to a temporary is not legit
-        // double& _ref_d = 3;
-        // std::string& _ref_str = "123abc";
+        // double& _ref_d = 3;                     // won't compile
+        // std::string& _ref_str = "123abc";       // won't compile
         // auto _fn1 = [] ( std::string& ref ) {}; // <-- the lambda is valid, the call is not
         // _fn1( "???" );
     }
@@ -66,11 +66,10 @@ int main( void )
         try {
             A::SetCtorThrowCondition( 5 );
 
-            A* ten_instances = new A[ 10 ];                     // Personally I prefer to avoid such a low-level
-                                                                // data allocation approach.
-                                                                // But this time it's required
+            A* ten_instances = new A[ 10 ];                     // Unmanaged memory allocation
+                                                                // This approach is now considered outdated
 
-            // Please also recall that every element is a chunk of data representing an
+            // Please also remember that every element is a chunk of data representing an
             // instance of A. In my gcc x64 debug run the size of each element is 0x38 bytes
 
             // So technically what we see. The compiler allocates a block of memory

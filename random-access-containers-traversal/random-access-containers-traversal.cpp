@@ -3,6 +3,7 @@
 #include <vector>
 #include <deque>
 #include <chrono>
+#include <algorithm>
 
 int main( void )
 {

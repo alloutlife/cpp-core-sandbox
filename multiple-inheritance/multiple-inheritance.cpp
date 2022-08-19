@@ -4,7 +4,7 @@
 
 /*
 
-Implementing a rhombus inheritance:
+Implementing a rhombus(diamond) inheritance:
 
            Top
             ^
@@ -23,6 +23,10 @@ Implementing a rhombus inheritance:
 class Top {
 public:
 
+    Top( void ) = default;
+    Top( const char* caller_name )
+    { std::cout << "Top is called from " << caller_name << std::endl; }
+
     virtual void meth1( void )
     {
         std::cout << "Top::meth1" << std::endl;
@@ -36,6 +40,7 @@ class Left : virtual public Top
 {
 public:
     Left()
+        : Top{ "left" }         // This will be ignored!
     {
         base_field1 = "L";
     }
@@ -50,6 +55,7 @@ class Right : virtual public Top
 {
 public:
     Right()
+        : Top{ "right" }         // This will be ignored!
     {
         base_field1 = "R";
     }
@@ -63,6 +69,11 @@ public:
 class bottom : public Left, public Right
 {
 public:
+    bottom()
+        : Top{ "bottom" }         // This will be called sinse bottom is the final inheritor
+    {
+    }
+
     void meth1( void ) override
     {
         if( Left::base_field1 != Right::base_field1 ) {
@@ -73,7 +84,6 @@ public:
     }
 };
 
-
 int main( void )
 {
     bottom b;
@@ -82,7 +92,12 @@ int main( void )
     dynamic_cast< Left* >( &b )->meth1();
     dynamic_cast< Right* >( &b )->meth1();
 
-    // The only important note to be made here is that if we omit `virtual`
+    // The first important note to be made here is that if we omit `virtual`
     // inheritance keyword above, we will get two copies of Top member fields bound to Left and Right classes.
     // We will also loose the ability of addressing base_field1 without specifying a base class
+
+    // The second important notice is that if we had invoked the constructor for `A` inside the inheritor classes, it would be only invoked in constructor of `Bottom`
+    // and ignored in `Left` and `Right`.
+
+    return 0;
 }

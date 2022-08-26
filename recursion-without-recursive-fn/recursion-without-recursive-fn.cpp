@@ -302,8 +302,8 @@ class Solution2
 
         // At the end we have:
         // `result` - number of closing parentheses that violate the correctness
-        // of the expression `number_of_open_p` - number of non-closed
-        // parentheses
+        // of the expression;
+        // `number_of_open_p` - number of non-closed parentheses.
         return violating_closures + number_of_open_p;
     }
 };

@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <assert.h>
 #include <iostream>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 //    E x a m p l e   # 1
 //
@@ -29,7 +31,7 @@ template <class Bptr, class Dptr> struct _is_convertible_to_base_ptr {
             sizeof(yes) ==
                 sizeof(check(
                     get_derived())) // Check that check( Bptr ) is instantiated
-            && !std::is_same<Bptr, void *>::value
+            && !std::is_same<Bptr, void*>::value
     };
 
     // The same could be done via constexpr
@@ -37,17 +39,23 @@ template <class Bptr, class Dptr> struct _is_convertible_to_base_ptr {
         sizeof(yes) ==
             sizeof(check(
                 get_derived())) // Check that check( Bptr ) is instantiated
-        && !std::is_same<Bptr, void *>::value;
+        && !std::is_same<Bptr, void*>::value;
 };
 
 // Wrapper struct
 template <class Base, class Derived> struct is_convertible_to_base {
-    enum { value = _is_convertible_to_base_ptr<Base *, Derived *>::value_alt };
+    enum { value = _is_convertible_to_base_ptr<Base*, Derived*>::value_alt };
 };
 
 struct Base1 {
+    virtual void _do() { return; }
 };
 struct Derived1 : public Base1 {
+    void _do() override
+    {
+        std::cout << "Hi, mom!" << std::endl;
+        return;
+    }
 };
 struct C {
 };
@@ -103,7 +111,7 @@ template <typename C, typename Ret, typename... Args>
 struct has_serialize<C, Ret(Args...)> {
   private:
     template <typename T>
-    static constexpr auto check(T *) -> typename std::is_same<
+    static constexpr auto check(T*) -> typename std::is_same<
         decltype(std::declval<T>().serialize(std::declval<Args>()...)),
         Ret      // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         >::type; // attempt to call it and see if the return type is correct
@@ -119,12 +127,12 @@ struct has_serialize<C, Ret(Args...)> {
 void _do_sfinae_example2()
 {
     struct X {
-        int serialize(const std::string &) { return 42; }
+        int serialize(const std::string&) { return 42; }
     };
     struct Y : X {
     };
 
-    static_assert(has_serialize<Y, int(const std::string &)>::value,
+    static_assert(has_serialize<Y, int(const std::string&)>::value,
                   "test #1 failed");
     // static_assert( has_serialize< char, bool >::value, "test #1 failed" ); //
     // won't compile

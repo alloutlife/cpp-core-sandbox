@@ -1,0 +1,16 @@
+Checks:
+    # Enable:
+    - bugprone-*
+    - clang-analyzer-*
+    - concurrency-*
+    - cppcoreguidelines-*
+    - readability-*
+
+    # Disable:
+    - -readability-implicit-bool-conversion
+
+ExtraArgs:
+    - -Wno-ignored-optimization-argument
+    - -Wno-unknown-warning-option
+    - -Wreturn-type
+

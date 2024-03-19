@@ -36,4 +36,5 @@
 
 # vscode
 .vscode/
+.cache/
 build/

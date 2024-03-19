@@ -1,2 +1,3 @@
 # cpp-core-sandbox
-A sandbox to perform experiments with core features of c++
+
+A sandbox to run different bits of code demonstrating particular core features of C++.

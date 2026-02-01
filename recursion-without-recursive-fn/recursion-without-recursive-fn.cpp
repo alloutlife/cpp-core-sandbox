@@ -1,31 +1,32 @@
 ﻿// This playground demonstrates how to organise a recursion without recursive
-// function call
+// function calls.
 
 // Consider solving a bit tricky leetcode problem
 // [url](https://leetcode.com/problems/remove-invalid-parentheses/)
 
 // The approach to finding a solution for this task is:
-// 1. find minimum modifications required to make the expression valid
+//
+// 1. find minimum deletes required to make the expression valid
 // 2. brute force the string by removing each parenthesis and checking if
-// modified string is good
+//    modified string is good
 
-#include <algorithm>
 #include <cassert>
 #include <deque>
+#include <stack>
 #include <string>
 #include <unordered_set>
 #include <vector>
 
 // Ideas for optimization:
-// - We can count a minimum number of changes required to make string valid,
-// so we don't need to proces those strings that contain differrent number of
-// changes.
-// - different removals may result in the same string to process. Use
-// memoization in order to skip already processed strings.
+//
+// - We can estimate a minimum number of deletes required to make the string
+//   valid, so we shouldn't need to process those strings that contain larger
+//   number of deletes.
+// - different intermediate deletes may give the same result. Use memoization in
+//   order to skip processing of known strings.
 // - there is no need to test removals of non-parentheses chars
 
-class Solution1
-{
+class Solution1 {
     struct _RecursionContext {
         size_t start_from{0};
         std::vector<size_t> indices_removed;
@@ -34,16 +35,15 @@ class Solution1
     size_t iterations_count_{0};
 
   public:
-    std::vector<std::string> removeInvalidParentheses(std::string s)
-    {
+    std::vector<std::string> removeInvalidParentheses(std::string s) {
         iterations_count_ = 0;
 
-        // Two different modifications may result in the same result
+        // Two different deletes may result in the same result
         std::unordered_set<std::string> result_set;
 
-        // Find minimum modifications required
-        auto min_mods_req = _find_min_modifications_required(s);
-        if (0 == min_mods_req) {
+        // Find minimum deletes required
+        const auto min_del_req = _find_min_deletes_required(s);
+        if (0 == min_del_req) {
             return {s};
         }
 
@@ -58,16 +58,16 @@ class Solution1
             auto ctx = std::move(_stack.front());
             _stack.pop_front();
 
-            // a. check if we are happy with current modifications
-            // Process only those modifications that are potentially good
-            if (ctx.indices_removed.size() == min_mods_req) {
+            // a. check if we are happy with current deletes
+            // Process only those deletes that are potentially good
+            if (ctx.indices_removed.size() == min_del_req) {
                 if (_is_well_formed(s, ctx.indices_removed)) {
                     result_set.insert(_remove_indices(s, ctx.indices_removed));
                 }
             }
 
-            // b. Check if we didn't exceed the count of modifications
-            if (ctx.indices_removed.size() < min_mods_req) {
+            // b. Check if we didn't exceed the count of deletes
+            if (ctx.indices_removed.size() < min_del_req) {
 
                 // We are going to test every available position where we have a
                 // parenthesis char
@@ -77,7 +77,7 @@ class Solution1
                         continue;
                     }
 
-                    // Push to stack further possible modifications
+                    // Push to stack further possible deletes
                     _RecursionContext new_ctx;
                     new_ctx.indices_removed = ctx.indices_removed;
                     new_ctx.indices_removed.push_back(pos);
@@ -89,15 +89,14 @@ class Solution1
         }
 
         std::vector<std::string> result;
-        for (const auto &str : result_set) {
+        for (auto &&str : result_set) {
             result.push_back(std::move(str));
         }
         return result;
     }
 
   private:
-    bool _is_well_formed(const std::string &s)
-    {
+    bool _is_well_formed(const std::string &s) {
         int number_of_open_p{0};
 
         for (auto const ch : s) {
@@ -115,8 +114,7 @@ class Solution1
     }
 
     bool _is_well_formed(const std::string &s,
-                         const std::vector<size_t> &skip_indices)
-    {
+                         const std::vector<size_t> &skip_indices) {
         int number_of_open_p{0};
         auto it_pos = skip_indices.cbegin();
 
@@ -141,8 +139,7 @@ class Solution1
         return number_of_open_p == 0;
     }
 
-    size_t _find_min_modifications_required(const std::string &s) noexcept
-    {
+    size_t _find_min_deletes_required(const std::string &s) noexcept {
         size_t violating_closures{0};
         size_t number_of_open_p{0};
 
@@ -166,8 +163,7 @@ class Solution1
     }
 
     std::string _remove_indices(const std::string &s,
-                                const std::vector<size_t> &indices) noexcept
-    {
+                                const std::vector<size_t> &indices) noexcept {
         // `indices` are considered to be sorted
         // TODO: there might be more optimal solution
         std::string result = s;
@@ -178,8 +174,7 @@ class Solution1
     }
 };
 
-class Solution2
-{
+class Solution2 {
     struct _RecursionContext {
         size_t start_from{0};
         std::string modified_string;
@@ -188,16 +183,15 @@ class Solution2
     std::unordered_set<std::string> already_visited_;
 
   public:
-    std::vector<std::string> removeInvalidParentheses(std::string s)
-    {
+    std::vector<std::string> removeInvalidParentheses(std::string s) {
         already_visited_.clear();
 
-        // Two different modifications may result in the same result
+        // Two different deletes may result in the same result
         std::unordered_set<std::string> result_set;
 
-        // Find minimum modifications required
-        auto min_mods_req = _find_min_modifications_required(s);
-        if (0 == min_mods_req) {
+        // Find minimum deletes required
+        auto min_del_req = _find_min_deletes_required(s);
+        if (0 == min_del_req) {
             return {s};
         }
 
@@ -210,19 +204,19 @@ class Solution2
             auto ctx = std::move(_stack.front());
             _stack.pop_front();
 
-            // a. check if we are happy with current modifications
-            // Process only those modifications that are potentially good
-            auto modifications_count = s.size() - ctx.modified_string.size();
-            if (modifications_count == min_mods_req) {
-                // Don't waste time processing strings with different
-                // modifications count
+            // a. check if we are happy with current deletes
+            // Process only those deletes that are potentially good
+            auto deletes_count = s.size() - ctx.modified_string.size();
+            if (deletes_count == min_del_req) {
+                // Don't waste time processing strings with larger deletes
+                // count
                 if (_is_well_formed(ctx.modified_string)) {
                     result_set.insert(ctx.modified_string);
                 }
             }
 
-            // b. Check if we didn't exceed the number of modifications
-            if (modifications_count < min_mods_req) {
+            // b. Check if we didn't exceed the number of deletes
+            if (deletes_count < min_del_req) {
 
                 // We are going to test every available position where we have a
                 // parenthesis char
@@ -234,7 +228,7 @@ class Solution2
                         continue;
                     }
 
-                    // Push to stack further possible modifications
+                    // Push to stack further possible deletes
                     _RecursionContext new_ctx;
                     if (pos != 0) {
                         new_ctx.modified_string =
@@ -258,15 +252,14 @@ class Solution2
         }
 
         std::vector<std::string> result;
-        for (const auto &str : result_set) {
+        for (auto &&str : result_set) {
             result.push_back(std::move(str));
         }
         return result;
     }
 
   private:
-    bool _is_well_formed(const std::string &s)
-    {
+    static bool _is_well_formed(std::string_view s) {
         int number_of_open_p{0};
 
         for (auto const ch : s) {
@@ -283,8 +276,7 @@ class Solution2
         return number_of_open_p == 0;
     }
 
-    size_t _find_min_modifications_required(const std::string &s) noexcept
-    {
+    static size_t _find_min_deletes_required(std::string_view s) noexcept {
         size_t violating_closures{0};
         size_t number_of_open_p{0};
 
@@ -308,9 +300,113 @@ class Solution2
     }
 };
 
-int main(void)
-{
-    Solution1 sol1;
+namespace FibLoop {
+
+[[nodiscard]] int fibNaive(int depth) {
+    if (depth == 0 || depth == 1) {
+        return depth;
+    }
+
+    int a = 0;
+    int b = 1;
+    int sum = 0;
+    for (int step = 0; step < (depth - 1); ++step) {
+        sum = a + b;
+        a = b;
+        b = sum;
+    }
+    return sum;
+}
+
+[[nodiscard]] int fibRec(int depth) {
+    if (depth <= 1) {
+        return depth;
+    }
+    return fibRec(depth - 1) + fibRec(depth - 2);
+}
+
+// A recursive fib(n) does:
+//
+// 1. If n <= 1 return n
+// 2. Otherwise compute fib(n-1), then fib(n-2), then return sum.
+//
+// We simulate that with frames like:
+//
+// • n — argument
+// • state — where we are in the function:
+// • e1: just entered
+// • e2: returned from fib(n-1) (so we have a)
+// • e3: returned from fib(n-2) (so we have b, can compute result)
+//
+// We also maintain a single variable ret that represents “the return value of
+// the most recently completed frame”, like a CPU return register.
+
+enum class FrameState : uint8_t {
+    e1, // call fibo(n-1)
+    e2, // have result from e1, call fibo(n-2)
+    e3  // have result from e2, calculate and retunr a sum
+};
+struct FiboFrame {
+    const int in; // input argument, depth
+
+    FrameState state = FrameState::e1;
+
+    int res1 = 0; // result of fib(in - 1)
+    int res2 = 0; // result of fib(in - 2)
+
+    // We don't store a result as `return res;` implies exit from the function
+};
+
+[[nodiscard]] int fibFrames(int depth) {
+
+    std::stack<FiboFrame> frames;
+    int retRegister = 0; // fib(b) return value
+
+    // Make a very first call. The return from this call is an overall result of
+    // the `fibFrames` function.
+    frames.emplace(depth);
+    while (!frames.empty()) {
+        auto &f = frames.top();
+
+        switch (f.state) {
+
+        case FrameState::e1: // call fib(n-1)
+            if (f.in <= 1) {
+                retRegister = f.in;
+                frames.pop(); // immediate "Return" from function
+            } else {
+                frames.emplace(f.in - 1);
+            }
+            f.state = FrameState::e2;
+            break;
+        case FrameState::e2: // call fib(n-2)
+
+            f.res1 = retRegister;
+            if (f.in <= 1) {
+                retRegister = f.in;
+                frames.pop(); // immediate "Return" from function
+            } else {
+                frames.emplace(f.in - 2);
+            }
+            f.state = FrameState::e3;
+            break;
+        case FrameState::e3: // calculate sum and return
+
+            f.res2 = retRegister;
+            retRegister = f.res1 + f.res2;
+
+            frames.pop(); // "Return" from function
+            break;
+        }
+    }
+
+    return retRegister;
+}
+
+} // namespace FibLoop
+
+int main(void) {
+    [[maybe_unused]] Solution1 sol1;
     Solution2 sol2;
 
     // clang-format off
@@ -330,6 +426,9 @@ int main(void)
         auto result2 = sol2.removeInvalidParentheses(str);
         // assert(result1 == result2);
     }
+
+    assert(FibLoop::fibNaive(15) == FibLoop::fibRec(15));
+    assert(FibLoop::fibNaive(15) == FibLoop::fibFrames(15));
 
     return 0;
 }

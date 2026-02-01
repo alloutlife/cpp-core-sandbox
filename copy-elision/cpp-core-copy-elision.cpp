@@ -8,13 +8,11 @@
 //  - when an exception is caught by value (TODO: I wasn't lucky to observe this)
 // See [url](https://en.cppreference.com/w/cpp/language/copy_elision) for details
 
-
 #include <class-a.h>
-#include <iomanip>
 
 using namespace cpp_core_sandbox;
 
-A GenerateInstanceOfA_local( void )
+A GenerateInstanceOfA_local(void)
 {
     // Non-mandatory elision of copy/move (since C++11) operations
 
@@ -28,31 +26,31 @@ A GenerateInstanceOfA_local( void )
     return local;
 }
 
-A GenerateInstanceOfA_local_undefined( void )
+A GenerateInstanceOfA_local_undefined(void)
 {
     A local;
-    A local2{ std::move( local ) };
+    A local2 { std::move(local) };
 
     return local;
 }
 
-A GenerateInstanceOfA_temporary( void )
+A GenerateInstanceOfA_temporary(void)
 {
     // Mandatory elision of copy/move operations:
     // In a return statement, when the operand is a prvalue of the same
     // class type (ignoring cv-qualification) as the function return type
-    return A{};
+    return A {};
 }
 
-A GenerateInstanceOfA_via_function_call( void )
+A GenerateInstanceOfA_via_function_call(void)
 {
     return GenerateInstanceOfA_temporary();
 }
 
-A GenerateInstanceOfA_via_xvalue( void )
+A GenerateInstanceOfA_via_xvalue(void)
 {
     A local;
-    return std::move( local );              // The compiler might generate -Wpessimizing-move
+    return std::move(local); // The compiler might generate -Wpessimizing-move
 }
 
 int main(void)
@@ -91,53 +89,45 @@ int main(void)
             try {
                 std::cout << "Now we're going to throw temporary object A{} and catch it by reference. Copy elision is observed" << std::endl;
                 throw GenerateInstanceOfA_via_function_call();
-            }
-            catch( A& by_ref ) {
-                std::cout << "addr of `by_ref`: " << reinterpret_cast< uint64_t >( &by_ref ) << std::endl;
-                std::cout << "rethrow; catch by reference .."  << std::endl;
+            } catch (A& by_ref) {
+                std::cout << "addr of `by_ref`: " << reinterpret_cast<uint64_t>(&by_ref) << std::endl;
+                std::cout << "rethrow; catch by reference .." << std::endl;
                 throw;
             }
-        } catch( A& by_ref ) {
-            std::cout << "addr of `by_ref`: " << reinterpret_cast< uint64_t >( &by_ref ) << std::endl;
-            std::cout << "rethrow; catch by value .. (make a copy)"  << std::endl;
+        } catch (A& by_ref) {
+            std::cout << "addr of `by_ref`: " << reinterpret_cast<uint64_t>(&by_ref) << std::endl;
+            std::cout << "rethrow; catch by value .. (make a copy)" << std::endl;
             throw;
         }
-    }
-    catch( A by_val ) {
-        std::cout << "addr of `by_val`: " << reinterpret_cast< uint64_t >( &by_val ) << std::endl;
+    } catch (A by_val) {
+        std::cout << "addr of `by_val`: " << reinterpret_cast<uint64_t>(&by_val) << std::endl;
     }
 
     try {
         try {
             std::cout << "Now we're going to throw temporary object A{} (prvalue) and catch it by value. The compiler doesn't elide copy" << std::endl;
             throw GenerateInstanceOfA_via_function_call();
-        }
-        catch( A by_val ) {
-            std::cout << "addr of `by_val`: " << reinterpret_cast< uint64_t >( &by_val ) << std::endl;
+        } catch (A by_val) {
+            std::cout << "addr of `by_val`: " << reinterpret_cast<uint64_t>(&by_val) << std::endl;
 
             // rethrow. the following block catches the original object by reference
             throw;
         }
-    } catch( A& by_ref ) {
-        std::cout << "addr of `by_ref`: " << reinterpret_cast< uint64_t >( &by_ref ) << std::endl;
+    } catch (A& by_ref) {
+        std::cout << "addr of `by_ref`: " << reinterpret_cast<uint64_t>(&by_ref) << std::endl;
     }
-
-
 
     try {
         try {
             std::cout << "Throw local lvalue A{}. Compiler doesn't elide copy. Instead we observe moving the lvalue" << std::endl;
             auto local = GenerateInstanceOfA_temporary();
             throw local;
+        } catch (A& by_ref) {
+            std::cout << "addr of `by_ref`: " << reinterpret_cast<uint64_t>(&by_ref) << std::endl;
+            throw std::move(by_ref);
         }
-        catch( A& by_ref ) {
-            std::cout << "addr of `by_ref`: " << reinterpret_cast< uint64_t >( &by_ref ) << std::endl;
-            throw std::move( by_ref );
-        }
-    }
-    catch( A& by_ref )
-    {
-        std::cout << "addr of `by_ref`: " << reinterpret_cast< uint64_t >( &by_ref ) << std::endl;
+    } catch (A& by_ref) {
+        std::cout << "addr of `by_ref`: " << reinterpret_cast<uint64_t>(&by_ref) << std::endl;
     }
 
     return 0;

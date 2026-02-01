@@ -10,8 +10,9 @@
 
 using namespace std::chrono_literals;
 
-void future_promise_playground(void)
-{
+constexpr auto SOME_DELAY = 10ms;
+
+void future_promise_playground(void) {
     // 1. Promise is destructed while we are blocked on f.wait()
     {
         auto promise1 = std::make_unique<std::promise<std::string>>();
@@ -19,7 +20,7 @@ void future_promise_playground(void)
 
         // Setup a background cleanup routine
         std::thread t([p1 = std::move(promise1)] {
-            std::this_thread::sleep_for(100ms);
+            std::this_thread::sleep_for(SOME_DELAY);
             std::cout << "cleanup p1" << std::endl;
         });
 
@@ -29,25 +30,25 @@ void future_promise_playground(void)
 
         try {
             std::cout << f.get() << std::endl;
-        } catch (std::future_error& ex) {
+        } catch (std::future_error &ex) {
             // Here what we have!
             assert(ex.code() == std::future_errc::broken_promise);
-        } catch (std::exception& ex) {
+        } catch (std::exception &ex) {
             assert(false);
-            std::cout << ex.what() << std::endl;
+            std::cerr << ex.what() << std::endl;
         }
 
         t.join(); // Don't forget to join
     }
 
-    // 2. Normal processing instead of result
+    // 2. Normal processing
     {
         auto promise1 = std::make_unique<std::promise<std::string>>();
         auto f = promise1->get_future();
 
         // Setup a background cleanup routine
         std::thread t([p1 = std::move(promise1)] {
-            std::this_thread::sleep_for(100ms);
+            std::this_thread::sleep_for(SOME_DELAY);
             std::cout << "setting p1" << std::endl;
             p1->set_value(std::string{"result?"});
         });
@@ -63,7 +64,7 @@ void future_promise_playground(void)
         // We are not allowed to get it twice
         try {
             f.get();
-        } catch (std::future_error& ex) {
+        } catch (std::future_error &ex) {
             // Here what we have!
             assert(ex.code() == std::future_errc::no_state);
         }
@@ -78,7 +79,7 @@ void future_promise_playground(void)
 
         // Setup a background cleanup routine
         std::thread t([p1 = std::move(promise1)] {
-            std::this_thread::sleep_for(100ms);
+            std::this_thread::sleep_for(SOME_DELAY);
             try {
                 // Do something bad
                 std::vector<int> empty_vector;
@@ -99,15 +100,15 @@ void future_promise_playground(void)
         try {
             auto result = f.get();
             assert(false);
-        } catch (std::exception& ex) {
+        } catch (std::exception &ex) {
             // Here what we have!
-            assert(dynamic_cast<std::out_of_range*>(&ex) != nullptr);
+            assert(dynamic_cast<std::out_of_range *>(&ex) != nullptr);
         }
 
         t.join(); // Don't forget to join
     }
 
-    // 4. Acquiring future, don't wait
+    // 4. Acquire future, not use it
     {
         std::thread t;
         auto promise1 = std::make_unique<std::promise<std::string>>();
@@ -116,7 +117,7 @@ void future_promise_playground(void)
 
             // Setup a background cleanup routine
             t = std::thread{[p1 = std::move(promise1)] {
-                std::this_thread::sleep_for(100ms);
+                std::this_thread::sleep_for(SOME_DELAY);
                 p1->set_value(std::string{"result?"});
                 std::cout << "p1 is set" << std::endl;
             }};
@@ -134,8 +135,7 @@ void future_promise_playground(void)
     }
 }
 
-int main(void)
-{
+int main(void) {
     future_promise_playground();
     return 0;
 }

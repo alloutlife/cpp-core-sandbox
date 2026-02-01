@@ -332,29 +332,30 @@ namespace FibLoop {
 //
 // We simulate that with frames like:
 //
-// • n — argument
-// • state — where we are in the function:
-// • e1: just entered
-// • e2: returned from fib(n-1) (so we have a)
-// • e3: returned from fib(n-2) (so we have b, can compute result)
+// • in - argument
+// • state - where we are in the function:
+//     • e1: just entered
+//     • e2: returned from fib(n-1) (so we have a)
+//     • e3: returned from fib(n-2) (so we have b, can compute result)
 //
-// We also maintain a single variable ret that represents “the return value of
-// the most recently completed frame”, like a CPU return register.
+// We also maintain a single variable retRegister that represents “the return
+// value of the most recently completed frame”, like a CPU return register.
 
 enum class FrameState : uint8_t {
-    e1, // call fibo(n-1)
-    e2, // have result from e1, call fibo(n-2)
-    e3  // have result from e2, calculate and retunr a sum
+    e1, // call fib(n-1)
+    e2, // have result from e1, call fib(n-2)
+    e3  // have result from e2, calculate and return a sum
 };
 struct FiboFrame {
     const int in; // input argument, depth
 
     FrameState state = FrameState::e1;
 
-    int res1 = 0; // result of fib(in - 1)
-    int res2 = 0; // result of fib(in - 2)
+    int lFib = 0; // result of fib(in - 1)
+    int rFib = 0; // result of fib(in - 2)
 
-    // We don't store a result as `return res;` implies exit from the function
+    // NOTE: We don't store a result here, `retRegister` passes result to the
+    // callee frame, which is next on the stack.
 };
 
 [[nodiscard]] int fibFrames(int depth) {
@@ -369,37 +370,32 @@ struct FiboFrame {
         auto &f = frames.top();
 
         switch (f.state) {
-
         case FrameState::e1: // call fib(n-1)
             if (f.in <= 1) {
                 retRegister = f.in;
                 frames.pop(); // immediate "Return" from function
             } else {
+                f.state = FrameState::e2;
                 frames.emplace(f.in - 1);
             }
-            f.state = FrameState::e2;
             break;
         case FrameState::e2: // call fib(n-2)
-
-            f.res1 = retRegister;
+            f.lFib = retRegister;
             if (f.in <= 1) {
                 retRegister = f.in;
                 frames.pop(); // immediate "Return" from function
             } else {
+                f.state = FrameState::e3;
                 frames.emplace(f.in - 2);
             }
-            f.state = FrameState::e3;
             break;
         case FrameState::e3: // calculate sum and return
-
-            f.res2 = retRegister;
-            retRegister = f.res1 + f.res2;
-
+            f.rFib = retRegister;
+            retRegister = f.lFib + f.rFib;
             frames.pop(); // "Return" from function
             break;
         }
     }
-
     return retRegister;
 }
 

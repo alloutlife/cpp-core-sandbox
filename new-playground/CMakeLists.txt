@@ -5,7 +5,7 @@ enable_testing()
 set(APP_NAME new-playground)
 project(${APP_NAME})
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 add_executable(${APP_NAME} ${APP_NAME}.cpp)
 add_executable(${APP_NAME}.g ${APP_NAME}.g.cpp)
 

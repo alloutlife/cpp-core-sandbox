@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 project(cpp-core-sandbox)
 
@@ -11,7 +11,7 @@ else()
     # lots of warnings and all warnings as errors
     add_compile_options(
         -Wall -Wextra -pedantic
-        # -Werror  <-- a must for commercial projects. However we need some warnings remain
+        # -Werror  <-- give way for some warnings
     )
 endif()
 
@@ -25,6 +25,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_subdirectory(copy-elision)
+add_subdirectory(create-once-return)
 add_subdirectory(stack-unwind)
 add_subdirectory(move-semantics)
 add_subdirectory(common)

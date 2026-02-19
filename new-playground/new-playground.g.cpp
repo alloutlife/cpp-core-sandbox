@@ -4,24 +4,24 @@
 
 class A {
   public:
-    bool b_{false};
-    char ch_{'a'};
-    unsigned long long u64_{19};
+    [[maybe_unused]] bool b_{false};
+    [[maybe_unused]] char ch_{'a'};
+    [[maybe_unused]] unsigned long long u64_{19};
 };
 
 class B {
   public:
   private:
-    bool b_{false};
-    unsigned long long u64_{19};
-    char ch_{'a'};
+    [[maybe_unused]] bool b_{false};
+    [[maybe_unused]] unsigned long long u64_{19};
+    [[maybe_unused]] char ch_{'a'};
 };
 
 class C {
   public:
-    unsigned long long u64_{19};
-    bool b_{false};
-    char ch_{'a'};
+    [[maybe_unused]] unsigned long long u64_{19};
+    [[maybe_unused]] bool b_{false};
+    [[maybe_unused]] char ch_{'a'};
 };
 
 TEST(allocations, class_members_order_matters) {

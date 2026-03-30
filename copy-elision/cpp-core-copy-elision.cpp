@@ -39,7 +39,7 @@ A GenerateInstanceOfA_temporary(void)
     // Mandatory elision of copy/move operations:
     // In a return statement, when the operand is a prvalue of the same
     // class type (ignoring cv-qualification) as the function return type
-    return A {};
+    return A { };
 }
 
 A GenerateInstanceOfA_via_function_call(void)

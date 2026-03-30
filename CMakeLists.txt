@@ -1,19 +1,6 @@
-cmake_minimum_required(VERSION 3.10)
-
-set(CMAKE_CXX_STANDARD 23)
+cmake_minimum_required(VERSION 3.27)
 
 project(cpp-core-sandbox)
-
-if (MSVC)
-    # warning level 4 and all warnings as errors
-    add_compile_options(/W4 /WX)
-else()
-    # lots of warnings and all warnings as errors
-    add_compile_options(
-        -Wall -Wextra -pedantic
-        # -Werror  <-- give way for some warnings
-    )
-endif()
 
 include(FetchContent)
 FetchContent_Declare(
@@ -35,5 +22,6 @@ add_subdirectory(templates-playground)
 add_subdirectory(recursion-without-recursive-fn)
 add_subdirectory(multithreading-sandbox)
 add_subdirectory(optional-playground)
+add_subdirectory(ranges-playground)
 add_subdirectory(new-playground)
 add_subdirectory(streambuf)

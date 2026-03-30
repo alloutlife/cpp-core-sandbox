@@ -4,18 +4,33 @@ AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AllowShortBlocksOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+BreakConstructorInitializers: BeforeComma
+PackConstructorInitializers: Never
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+
+ColumnLimit: 80
+Language: Cpp
+Standard: Cpp11
+
 SortIncludes: true
 IncludeBlocks: Regroup
 
 IncludeCategories:
   # 1) Project headers
   - Regex: '^"'
+    Priority: 1
+
+  # 3) .h
+  - Regex: '^<.*.h>$'
     Priority: 3
 
   # 2) Standard library
   - Regex: '^<.*>$'
-    Priority: 1
-
-  # 3) Third-party libraries
-  - Regex: '^<(boost|fmt|gtest|spdlog)/.*>'
     Priority: 2
+
+  # 4) Third-party libraries
+  - Regex: '^<(gmock|gtest)/.*>'
+    Priority: 4

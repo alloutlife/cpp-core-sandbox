@@ -1,3 +1,5 @@
+#include "ranges_playground.h"
+
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -108,25 +110,12 @@ void experimentation_1()
     // printView(rv); // ☠️
 }
 
-void filterThenReverse()
+template <std::ranges::input_range R>
+void experimentation_2(R &&input)
+// Use of the `input_range` concept
 {
-    const std::array originalList{1, 2, 3, 4, 5};
-    auto v = originalList |
-             std::views::filter([](int val) { return val % 3 == 1; }) |
-             std::views::reverse;
-
-    printView(v, "filter+reverse:");
-}
-
-void reverseThenFilter()
-{
-    // Is semantically equal to `filterThenReverse` but should demonstrate
-    // better performance.
-    const std::array originalList{1, 2, 3, 4, 5};
-    auto v = originalList | std::views::reverse |
-             std::views::filter([](int val) { return val % 3 == 1; });
-
-    printView(v, "reverse+filter:");
+    const auto v = input | std::views::drop(3);
+    printView(v);
 }
 
 int main()
@@ -202,8 +191,14 @@ int main()
 
     experimentation_1();
 
-    filterThenReverse();
-    reverseThenFilter(); // <-- preferred order
+    std::array a1{1, 2, 3, 4, 5};
+    printView(ranges_playground::filterThenReverse(a1), "filter+reverse:");
+    printView(ranges_playground::reverseThenFilter(std::array{1, 2, 3, 4, 5}),
+              "reverse+filter:"); // <-- preferred order of views
 
+    // TODO: ???
+    // Demonstrate an alternative:
+    // template <std::ranges::input_range R>
+    // void reverseThenFilter(R &&input)
     return 0;
 }

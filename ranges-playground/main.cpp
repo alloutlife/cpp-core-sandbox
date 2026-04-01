@@ -79,6 +79,12 @@ void printView(auto &&r)
     std::cout << std::endl;
 }
 
+void printView(auto &&r, std::string_view caption)
+{
+    std::cout << caption;
+    printView(r);
+}
+
 auto makeViewWithDanglingData()
 // ☠️ return a view that refers to a dangling vector, compiler doesn't
 {
@@ -100,6 +106,27 @@ void experimentation_1()
                                std::views::reverse | std::views::take(5);
     // Would hang forever:
     // printView(rv); // ☠️
+}
+
+void filterThenReverse()
+{
+    const std::array originalList{1, 2, 3, 4, 5};
+    auto v = originalList |
+             std::views::filter([](int val) { return val % 3 == 1; }) |
+             std::views::reverse;
+
+    printView(v, "filter+reverse:");
+}
+
+void reverseThenFilter()
+{
+    // Is semantically equal to `filterThenReverse` but should demonstrate
+    // better performance.
+    const std::array originalList{1, 2, 3, 4, 5};
+    auto v = originalList | std::views::reverse |
+             std::views::filter([](int val) { return val % 3 == 1; });
+
+    printView(v, "reverse+filter:");
 }
 
 int main()
@@ -174,6 +201,9 @@ int main()
     // printView(vv);
 
     experimentation_1();
+
+    filterThenReverse();
+    reverseThenFilter(); // <-- preferred order
 
     return 0;
 }

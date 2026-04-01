@@ -5,6 +5,27 @@
 #include <random>
 #include <ranges>
 
+/* Terms:
+
+- Range - a collection of objects which can be iterated.
+    Examples: vector, string, list, array, C-arrays, views::iota()
+
+- Range factory
+    EXample: std::views::iota
+
+- View - an object, a range that transforms another underlying range.
+    Example:
+        `auto v = vector<>{} | views::take(n)`
+                                        ^--------- View Adapter
+              ^------- View, type is std::ranges::take_view<
+                                std::ranges::ref_view<std::vector<int>>>
+
+- View Adapter - takes a range, returns a view object. May be chained with
+other view adapters using the | operator. Adapters are in the
+`std::ranges::views namespace`
+
+*/
+
 std::random_device s_rd; // recall it is external, slow, non-deterministic
 std::seed_seq s_seed{s_rd(), s_rd(), s_rd(),
                      s_rd()}; // mt19937 is happy to take a long seed sequence
@@ -14,7 +35,8 @@ std::uniform_int_distribution<> s_dist{1, 255};
 
 auto randomSequence(auto &rng, auto &dist)
 {
-    // Infinite generator.
+    // Infinite generator of random numbers. Use the range factory
+    // `std::views::iota`.
     //
     // NOTE: the counter produced by `iota` is ignored. The incrementing effort
     // is negligible compared to the `dist(rng)`. And overall, this is an
@@ -26,6 +48,28 @@ auto randomSequence(auto &rng, auto &dist)
            });
 }
 
+auto randomSequence_alt(auto &rng, auto &dist)
+{
+    // The same as above but using the explicit types, not the adapters.
+    // As a consequence, they are not composable via | operator
+    std::ranges::transform_view r2(std::ranges::iota_view(0),
+                                   [&]([[maybe_unused]] auto) {
+                                       // comment
+                                       return dist(rng);
+                                   });
+    return r2;
+}
+
+void viewsAndViewAdapters()
+{
+    std::int8_t cArray[4] = {1, 2, 3, 4};
+
+    // These are roughly the same, the type of v1 looks like a closure, although
+    // it doesn't imply an additional run-time complexity.
+    [[maybe_unused]] auto v1 = cArray | std::views::take(4);
+    [[maybe_unused]] std::ranges::take_view v2(cArray, 4);
+}
+
 void printView(auto &&r)
 {
     std::cout << "size: " << std::ranges::distance(r) << " | ";
@@ -35,30 +79,37 @@ void printView(auto &&r)
     std::cout << std::endl;
 }
 
-auto make_view_with_dangling_data()
+auto makeViewWithDanglingData()
 // ☠️ return a view that refers to a dangling vector, compiler doesn't
 {
     std::vector<int> v{1, 2, 3};
     return v | std::views::take(2);
+
+    // NOTE: ✅ this would be safe instead:
+    // return std::ranges::take_view(std::vector<int>{1, 2, 3}, 3);
+
+    // NOTE: ✅ this would be safe either:
+    // return std::ranges::take_view(std::move(v), 3);
 }
 
 void experimentation_1()
 {
     // Attempt to pipe an infinite generator to a reverse view adaptor that
     // wants to start from .end
-    auto rv = randomSequence(s_rng, s_dist) | std::views::reverse |
-              std::views::take(5);
-    printView(rv); // TODO:
+    [[maybe_unused]] auto rv = randomSequence(s_rng, s_dist) |
+                               std::views::reverse | std::views::take(5);
+    // Would hang forever:
+    // printView(rv); // ☠️
 }
 
 int main()
 {
     // A lazy generator, no generating happens so far
-    auto rv = randomSequence(s_rng, s_dist) | std::views::take(10);
+    auto rv = randomSequence_alt(s_rng, s_dist) | std::views::take(10);
 
     {
         // Actually we can do like this:
-        auto rv1 = std::ranges::take_view(randomSequence(s_rng, s_dist), 10);
+        std::ranges::take_view rv1{randomSequence(s_rng, s_dist), 10};
         printView(rv1);
 
         // .. but the view adapter version `| std::views::take` is more
@@ -73,7 +124,7 @@ int main()
 
     // Create a view on 5 items from `randomValues`.
     // Doesn't own data
-    auto randomValues_view1 = std::ranges::take_view(randomValues, 5);
+    std::ranges::take_view randomValues_view1{randomValues, 5};
     printView(randomValues_view1);
 
     randomValues.clear();
@@ -121,6 +172,8 @@ int main()
     // ☠️
     // auto vv = make_view_with_dangling_data();
     // printView(vv);
+
+    experimentation_1();
 
     return 0;
 }
